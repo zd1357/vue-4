@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh‑CN">
+<head>
+    <meta charset="UTF‑8">
+    <title>个人信息页面‑Vue3实验</title>
+    <!-- CDN引入Vue3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans‑serif;
+            font-size:23px;       /*全局默认字体*/
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .base-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom:20px;
+        }
+        .info-text h2{
+            margin-bottom:8px;
+            font-size:30px;    /*姓名字体大小*/
+        }
+        h4{
+            font-size:25px;    /*小标题：个人简介、获奖与荣誉、技能列表*/
+            margin-bottom:8px;
+        }
+        .desc{
+            margin:12px 0;
+            color:#555;
+            line-height:1.6;
+            font-size:15px;     /*简介正文*/
+        }
+        .honor-item{
+            background:#e6fbff;
+            padding:8px 12px;
+            border-radius:6px;
+            margin:6px 0;
+            border-left:4px solid #00ffea;
+            font-size:15px;     /*获奖荣誉条目文字*/
+        }
+        .btn{
+            padding:6px 14px;
+            border:none;
+            border-radius:6px;
+            background:#409eff;
+            color:white;
+            cursor:pointer;
+            margin-bottom:16px;
+            font-size:18px;     /*按钮文字*/
+        }
+        .search-input{
+            width:100%;
+            padding:8px 12px;
+            border:1px solid #ccc;
+            border-radius:6px;
+            margin-bottom:16px;
+            font-size:16px;
+        }
+        .skill-item{
+            display:inline-block;
+            background:#ecf5ff;
+            color:#409eff;
+            padding:6px 12px;
+            border-radius:20px;
+            margin:4px;
+            font-size:17px;     /*技能标签字体*/
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- 个人基础信息 -->
+        <div class="base-info">
+            <!-- v‑bind绑定头像src属性 -->
+            <img class="avatar" v-bind:src="person.avatar" alt="头像">
+            <div class="info-text">
+                <h2>{{ person.name }}</h2>
+                <p>专业班级：{{ person.majorClass }}</p>
+            </div>
+        </div>
+        <!-- 点击按钮切换详情显示 v-on绑定点击事件 -->
+        <button class="btn" v-on:click="toggleDetail">
+            {{ isShowDetail ? '收起详情' : '展开详情' }}
+        </button>
+        <!-- v‑show控制详情显示隐藏 -->
+        <div v-show="isShowDetail" class="desc">
+            <h4>个人简介</h4>
+            <p>{{ person.intro }}</p>
+            <!-- ==========新增：获奖和荣誉模块========== -->
+            <h4 style="margin-top:16px;">获奖与荣誉</h4>
+            <div>
+                <div class="honor-item" v-for="honor in honorList" :key="honor.id">
+                    <span>{{ honor.title }}</span> — <span>{{ honor.time }}</span>
+                </div>
+            </div>
+        </div>
+        <!-- 搜索框 v-model双向绑定搜索关键词 -->
+        <input class="search-input" type="text" v-model="searchKey" placeholder="请输入关键词搜索技能">
+        <h4>技能列表</h4>
+        <!-- v-for渲染筛选后的技能，必须加:key -->
+        <div>
+            <span class="skill-item" v-for="item in filterSkillList" :key="item.id">
+                {{ item.name }}
+            </span>
+        </div>
+    </div>
+    <script>
+        // 获取Vue
+        const { createApp } = Vue
+        createApp({
+            // 响应式数据
+            data() {
+                return {
+                    //个人基础信息
+                    person: {
+                        avatar: "./444.jpg",
+                        name: "钟丹",
+                        majorClass: "24计科2班",
+                        intro: "专业是计算机前端开发，热爱Vue，爱好编程、阅读。平时喜欢研究网页交互效果，正在学习Vue3基础知识。"
+                    },
+                    //详情是否展开：true默认收起，点击按钮展开（实验要求）
+                    isShowDetail: true,
+                    //搜索关键词
+                    searchKey: "",
+                    //技能数组
+                    skillList: [
+                        { id: 1, name: "HTML" },
+                        { id: 2, name: "CSS" },
+                        { id: 3, name: "JavaScript" },
+                        { id: 4, name: "Vue3" },
+                        { id: 5, name: "计算机操作系统" },
+                        { id: 6, name: "MySQL" }
+                    ],
+                    // ==========新增：获奖荣誉数据==========
+                    honorList:[
+                        {id:1, title:"优秀共青团员", time:"2026‑05"},
+                        {id:2, title:"优秀学生奖学金二等", time:"2025‑11"},
+                        {id:3, title:"计算机二级证书", time:"2025‑04"}
+                    ]
+                }
+            },
+            //方法，事件处理函数
+            methods: {
+                toggleDetail() {
+                    this.isShowDetail = !this.isShowDetail
+                }
+            },
+            //计算属性：根据关键词过滤技能
+            computed: {
+                filterSkillList() {
+                    if (!this.searchKey.trim()) {
+                        return this.skillList
+                    }
+                    //模糊匹配过滤
+                    return this.skillList.filter(s =>
+                        s.name.toLowerCase().includes(this.searchKey.toLowerCase())
+                    )
+                }
+            },
+            //侦听器watch，监听搜索关键词变化
+            watch: {
+                searchKey(newVal, oldVal) {
+                    console.log(`搜索关键词发生变化：旧值=${oldVal}，新值=${newVal}`)
+                }
+            },
+            //生命周期钩子，页面挂载完成后执行
+            mounted() {
+                console.log("✅Vue页面挂载完成，mounted执行！")
+                console.log("当前个人信息：", this.person)
+            }
+        }).mount('#app') //挂载到id为app的div
+    </script>
+</body>
+</html>
+
